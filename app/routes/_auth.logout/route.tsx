@@ -1,7 +1,7 @@
 import { ActionFunctionArgs } from "@remix-run/node";
 import { Form, Link } from "@remix-run/react";
 import { redirect } from "react-router";
-import { destroySession, getSession } from "~/sessions";
+import { destroySession, getSession } from "~/sessions.server";
 
 export default function LogoutRoute()
 {

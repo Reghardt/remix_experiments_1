@@ -1,11 +1,9 @@
 import { ActionFunctionArgs, LoaderFunctionArgs, json, redirect } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
-import { commitSession, getSession } from "~/sessions";
+import { commitSession, getSession } from "~/sessions.server";
 
 export async function loader({request}: LoaderFunctionArgs){
     const session = await getSession(request.headers.get("Cookie"));
-
-    // console.log("session error:", session.get("error"))
 
     if(session.has("userId"))
     {
@@ -15,8 +13,7 @@ export async function loader({request}: LoaderFunctionArgs){
     {
         //if the key is part of the session's flash data, it can only be read once, after which it is removed from the session
         const data = { error: session.get("error")}
-        console.log(data)
-
+   
         return json(data, {
             headers: {
                 "Set-Cookie": await commitSession(session)
@@ -28,7 +25,6 @@ export async function loader({request}: LoaderFunctionArgs){
 export default function Login()
 {
     const { error } = useLoaderData<typeof loader>()
-    // console.log(error)
 
     return(
         <div>
@@ -84,7 +80,6 @@ export async function action({request}: ActionFunctionArgs)
     if(userId == null)
     {
         session.flash("error", "Invalid username/password");
-        // console.log(session.get("error"))
         return redirect("/login", {
             headers: {
                 "Set-Cookie": await commitSession(session)
@@ -93,6 +88,7 @@ export async function action({request}: ActionFunctionArgs)
     }
     else{
         session.set("userId", userId);
+        session.set("username", username?.toString() ?? "");
         return redirect("/", {
             headers: {
                 "Set-Cookie": await commitSession(session)

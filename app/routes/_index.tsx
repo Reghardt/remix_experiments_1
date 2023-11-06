@@ -1,5 +1,6 @@
-import type { MetaFunction } from "@remix-run/node";
-import { Link } from "@remix-run/react";
+import { redirect, type LoaderFunctionArgs, type MetaFunction, json } from "@remix-run/node";
+import { Link, useLoaderData } from "@remix-run/react";
+import { getSession } from "~/sessions.server";
 
 export const meta: MetaFunction = () => {
   return [
@@ -8,10 +9,27 @@ export const meta: MetaFunction = () => {
   ];
 };
 
+export async function loader({request}: LoaderFunctionArgs){
+  const session = await getSession(request.headers.get("Cookie"));
+  if(session.has("userId"))
+  {
+    return json({username: session.get("username")})
+  }
+  else
+  {
+    return redirect("/login")
+  }
+
+
+}
+
 export default function Index() {
+
+  const { username } = useLoaderData<typeof loader>();
+
   return (
     <div >
-      <div>Hello</div>
+      <div>Hello {username ?? "No username"}</div>
       <Link to={"/logout"}>Logout</Link>
     </div>
   );

@@ -8,31 +8,29 @@ import { commitSession, getSession } from "~/sessions.server";
 import querystring from 'node:querystring';
 import { getCSRFTokenFromBody, getCSRFTokenFromCookie, verify } from "./helpers/helpers.server";
 
-// export async function loader({request}: LoaderFunctionArgs){
-//     const session = await getSession(request.headers.get("Cookie"));
+export async function loader({request}: LoaderFunctionArgs){
+    const session = await getSession(request.headers.get("Cookie"));
 
-//     if(session.has("userId"))
-//     {
-//         return redirect("/")
-//     }
-//     else
-//     {
-//         //if the key is part of the session's flash data, it can only be read once, after which it is removed from the session
-//         const data = { error: session.get("error")}
+    if(session.has("userId"))
+    {
+        return redirect("/")
+    }
+    else
+    {
+        //if the key is part of the session's flash data, it can only be read once, after which it is removed from the session
+        const data = { error: session.get("error")}
    
-//         return json(data, {
-//             headers: {
-//                 "Set-Cookie": await commitSession(session)
-//             }
-//         })
-//     }
-
-//     return json({})
-// }
+        return json(data, {
+            headers: {
+                "Set-Cookie": await commitSession(session)
+            }
+        })
+    }
+}
 
 export default function Login()
 {
-    // const { error } = useLoaderData<typeof loader>()
+    const { error } = useLoaderData<typeof loader>()
     const isClient = useIsClient();
 
     const status = useScript(

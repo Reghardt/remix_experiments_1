@@ -1,12 +1,12 @@
 import { ActionFunctionArgs, LoaderFunctionArgs, json, redirect } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { useIsClient, useScript } from "@uidotdev/usehooks";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { commitSession, getSession } from "~/sessions.server";
 
 
 import querystring from 'node:querystring';
-import { verify } from "./utilities/verify.server";
+import { getCSRFTokenFromBody, getCSRFTokenFromCookie, verify } from "./helpers/helpers.server";
 
 // export async function loader({request}: LoaderFunctionArgs){
 //     const session = await getSession(request.headers.get("Cookie"));
@@ -43,12 +43,11 @@ export default function Login()
       );
 
     useEffect(() => {
-
-        if(isClient){
-        // @ts-expect-error
+        if(isClient)
+        {
+            // @ts-expect-error
             const res = google.accounts.id.initialize({
                 client_id: window.env.GOOGLE_CLIENT_ID,
-                // callback: handleCredentialResponse
                 ux_mode: "redirect"
             });
 
@@ -58,9 +57,6 @@ export default function Login()
                 {width: 100, size: "large"}
             )
         }
-        
-
-
     }, [status === "ready"])
 
     return(
@@ -105,42 +101,7 @@ function validateCredentials(username: FormDataEntryValue | null, password: Form
 }
 
 
-/**
- * @description Gets the CSRF token from the request.
- * @param request 
- * @returns the CSRF token if it exists, otherwise throws an error
- */
-function getCSRFTokenFromCookie(request: Request)
-{
-    const csrf_cookie = request.headers.get("cookie")
-    if(!csrf_cookie)
-    {
-        throw new Error("No CSRF cookie in request.");
-    }
-    else
-    {
-        const decoded_csrf_cookie = querystring.decode(csrf_cookie);
-        const g_csrf_token = decoded_csrf_cookie["g_csrf_token"]
-        if(typeof g_csrf_token !== "string")
-        {
-            throw new Error("No CSRF token in Cookie.");
-        }
-        return g_csrf_token
-    }
-}
 
-function getCSRFTokenFromBody(decodedRequestBody: querystring.ParsedUrlQuery)
-{
-    const g_csrf_token = decodedRequestBody["g_csrf_token"]
-    if(typeof g_csrf_token !== "string")
-    {
-        throw new Error("No CSRF token in post body.")
-    }
-    else
-    {
-        return g_csrf_token
-    }
-}
 
 export async function action({request}: ActionFunctionArgs)
 {
@@ -154,22 +115,41 @@ export async function action({request}: ActionFunctionArgs)
     }
 
     
-    console.log(await verify(decodedRequestBody))
+    const verifiedResult = await verify(decodedRequestBody)
+
+    //TODO: check if user exists on DB here
+
+    const session = await getSession(
+        request.headers.get("Cookie")
+    );
+
+    if(verifiedResult.userId)
+    {
+        session.set("userId", verifiedResult.userId);
+        session.set("username", verifiedResult.name);
+        return redirect("/", {
+            headers: {
+                "Set-Cookie": await commitSession(session)
+            }
+        })
+    }
+    else
+    {
+        session.flash("error", "Invalid username/password");
+        return redirect("/login", {
+            headers: {
+                "Set-Cookie": await commitSession(session)
+            }
+        })
+    }
+
+ 
 
 
 
-    // const payload = ticket.getPayload();
-    // const userid = payload['sub'];
-    
-    // const cred = decoded["credential"]
-    // if(cred && typeof cred === "string")
-    // {
-    //     console.log(cred)
-    // }
 
-    return new Response()
-    // console.log(await request.body?.getReader().read().then(res => console.log(res)))
-    // return json({})
+
+
     // const session = await getSession(
     //     request.headers.get("Cookie")
     // );

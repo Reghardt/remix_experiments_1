@@ -19,8 +19,6 @@ export async function loader({request}: LoaderFunctionArgs){
   {
     return redirect("/login")
   }
-
-
 }
 
 export default function Index() {

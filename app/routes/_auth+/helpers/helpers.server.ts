@@ -22,7 +22,7 @@ import querystring from 'node:querystring';
  * @throws idToken could not be verified
  * Throws if the OAuth2Client valiation failed
  */
-export async function verify(decodedRequestBody: querystring.ParsedUrlQuery)
+export async function verifyIdToken(decodedRequestBody: querystring.ParsedUrlQuery)
 {
     const idToken = decodedRequestBody["credential"]
     if(idToken === undefined || typeof idToken !== "string")

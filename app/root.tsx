@@ -10,6 +10,7 @@ import {
   ScrollRestoration,
   useLoaderData,
 } from "@remix-run/react";
+import { createTursoClient } from "./services/turso.server";
 
 export const links: LinksFunction = () => [
   // ...(cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }] : []),
@@ -18,7 +19,7 @@ export const links: LinksFunction = () => [
 ];
 
 export async function loader() {
-  console.log(process.env.GOOGLE_CLIENT_ID)
+
   return json({
     env: {
       GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,

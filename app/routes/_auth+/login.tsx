@@ -6,7 +6,8 @@ import { commitSession, getSession } from "~/sessions.server";
 
 
 import querystring from 'node:querystring';
-import { getCSRFTokenFromBody, getCSRFTokenFromCookie, verify } from "./helpers/helpers.server";
+import { getCSRFTokenFromBody, getCSRFTokenFromCookie, verifyIdToken } from "./helpers/helpers.server";
+import { createTursoClient } from "~/services/turso.server";
 
 export async function loader({request}: LoaderFunctionArgs){
     const session = await getSession(request.headers.get("Cookie"));
@@ -113,7 +114,7 @@ export async function action({request}: ActionFunctionArgs)
     }
 
     
-    const verifiedResult = await verify(decodedRequestBody)
+    const verifiedResult = await verifyIdToken(decodedRequestBody)
 
     //TODO: check if user exists on DB here
 
@@ -123,6 +124,10 @@ export async function action({request}: ActionFunctionArgs)
 
     if(verifiedResult.userId)
     {
+        const client = createTursoClient()
+        const res = await client.execute({ sql: "insert into users(id, email) values(?, ?);", args: [verifiedResult.userId, verifiedResult.name]});
+        console.log(res)
+
         session.set("userId", verifiedResult.userId);
         session.set("username", verifiedResult.name);
         return redirect("/", {
